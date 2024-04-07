@@ -1,21 +1,25 @@
-/** ===================================================================================================
-  *File Name: main.c
-  *
-  *Author: Mohamed Mabrouk
-  *
-  *Description: Mini Project Source file
-  *
-  *Date: 31/1/2024
-  *
-  *version: 1
-    ==================================================================================================*/
 
+/**
+* @file 	main.c
+* @brief APP Source file.
+*
+* This file contains The Application of Stop Watch
+*
+* @author [Mohamed Mabrouk]
+* @date [31 JAN 2024]
+*
+* @SWversion 1.0.0
+*
+* @remarks
+*    -Platform         : AVR
+*    -Peripherial      : Atmega32
+*/
+/*==================================================================================================================================*/
 /* ===================================================================================================
 											      Includes
 	===================================================================================================*/
 #include"avr/interrupt.h"
 #include"util/delay.h"
-
 /* ===================================================================================================
 									          Types Declaration
    ===================================================================================================*/
@@ -91,51 +95,282 @@ typedef enum
 								   	          Macro Definition
    ===================================================================================================*/
 
+/**
+ * @brief Null pointer definition
+ *
+ * @details
+ * - Type: define
+ * - Range: Address space
+ * - Resolution: Fixed
+ * - Unit: Address
+ */
 #define NULL_PTR ((void *)0)
+
+/**
+ * @brief Logic low value
+ *
+ * @details
+ * - Type: define
+ * - Range: 0
+ * - Resolution: Fixed
+ * - Unit: Bits
+ */
 #define LOGIC_LOW        (0u)
+
+/**
+ * @brief Logic high value
+ *
+ * @details
+ * - Type: define
+ * - Range: 1
+ * - Resolution: Fixed
+ * - Unit: Bits
+ */
 #define LOGIC_HIGH       (1u)
 
-/* Common Macros */
-#define SET_BIT(REG,BIT) 		(REG|=(1<<BIT))
-#define CLR_BIT(REG,BIT) 		(REG&=(~(1<<BIT)))
-#define TOGGLE_BIT(REG,BIT)	    (REG^=1<<BIT)
-#define GET_BIT(REG,BIT) 		((REG>>BIT)&1)
-#define BIT_IS_SET(REG,BIT) 	(REG & (1<<BIT))
-#define BIT_IS_CLEAR(REG,BIT) 	(!(REG & (1<<BIT)))
 
-/* GPIO */
+/*===================================================================================================
+												 Common Macros
+  ===================================================================================================*/
+/**
+ * @brief Set a bit in a register
+ *
+ * @details
+ * - Type: Macro
+ * - Range: Dependent on register size
+ * - Resolution: Fixed
+ * - Unit: Bits
+ */
+#define SET_BIT(REG,BIT)        (REG|=(1<<BIT))
 
+/**
+ * @brief Clear a bit in a register
+ *
+ * @details
+ * - Type: Macro
+ * - Range: Dependent on register size
+ * - Resolution: Fixed
+ * - Unit: Bits
+ */
+#define CLR_BIT(REG,BIT)        (REG&=(~(1<<BIT)))
+
+/**
+ * @brief Toggle a bit in a register
+ *
+ * @details
+ * - Type: Macro
+ * - Range: Dependent on register size
+ * - Resolution: Fixed
+ * - Unit: Bits
+ */
+#define TOGGLE_BIT(REG,BIT)        (REG^=1<<BIT)
+
+/**
+ * @brief Get the value of a bit in a register
+ *
+ * @details
+ * - Type: Macro
+ * - Range: 0 or 1
+ * - Resolution: Fixed
+ * - Unit: Bits
+ */
+#define GET_BIT(REG,BIT)        ((REG>>BIT)&1)
+
+/**
+ * @brief Check if a bit in a register is set
+ *
+ * @details
+ * - Type: Macro
+ * - Range: 0 or 1
+ * - Resolution: Fixed
+ * - Unit: Bits
+ */
+#define BIT_IS_SET(REG,BIT)     (REG & (1<<BIT))
+
+/**
+ * @brief Check if a bit in a register is clear
+ *
+ * @details
+ * - Type: Macro
+ * - Range: 0 or 1
+ * - Resolution: Fixed
+ * - Unit: Bits
+ */
+#define BIT_IS_CLEAR(REG,BIT)   (!(REG & (1<<BIT)))
+
+/*===================================================================================================
+												   GPIO 
+  ===================================================================================================*/
+/**
+ * @brief Number of GPIO ports
+ *
+ * @details
+ * - Type: define
+ * - Range: 4
+ * - Resolution: Fixed
+ * - Unit: Port
+ */
 #define NUM_OF_PORTS            4
+
+/**
+ * @brief Number of pins per GPIO port
+ *
+ * @details
+ * - Type: define
+ * - Range: 8
+ * - Resolution: Fixed
+ * - Unit: Pin
+ */
 #define NUM_OF_PINS_PER_PORT    8
+
+/**
+ * @brief High register value
+ *
+ * @details
+ * - Type: define
+ * - Range: 0xFF
+ * - Resolution: Fixed
+ * - Unit: Bits
+ */
 #define HIGH_REG 0xFF
 
-/* Timers */
+/*=================================================================================================== 
+												   Timers 
+  ===================================================================================================*/
 
+/**
+ * @brief Output compare mode for Timer1
+ *
+ * @details
+ * - Type: define
+ * - Range: 0:3
+ * - Resolution: 1U
+ * - Unit: Bits
+ */
 #define OC_DISCONNECTED 0
 #define OC_TOOGLE 1
 #define OC_CLEAR 2
 #define OC_SET 3
-#define TIMER1_CTC_MODE 		OC_DISCONNECTED
-#define TIMER1_PRESCALLER 		TIMER1_PRESCALER_64
+#define TIMER1_CTC_MODE        OC_DISCONNECTED
+
+/**
+ * @brief Timer1 prescaler value
+ *
+ * @details
+ * - Type: define
+ * - Range: Predefined constants (e.g., TIMER1_PRESCALER_64)
+ * - Resolution: Fixed
+ * - Unit: None
+ */
+#define TIMER1_PRESCALLER       TIMER1_PRESCALER_64
 
 /* app */
 
+/**
+ * @brief Segments enable pins
+ *
+ * @details
+ * - Type: define
+ * - Range: 0x3F
+ * - Resolution: Fixed
+ * - Unit: Bits
+ */
 #define SEGMENTS_ENABLE_PINS 0x3F
+
+/**
+ * @brief Decoder pins
+ *
+ * @details
+ * - Type: define
+ * - Range: 0x0F
+ * - Resolution: Fixed
+ * - Unit: Bits
+ */
 #define DECODER_PINS 0x0F
+
+/**
+ * @brief Reset value
+ *
+ * @details
+ * - Type: define
+ * - Range: 0
+ * - Resolution: Fixed
+ * - Unit: None
+ */
 #define RESET_VALUE 0
+
+/**
+ * @brief Maximum value for seconds (first digit)
+ *
+ * @details
+ * - Type: define
+ * - Range: 10
+ * - Resolution: Fixed
+ * - Unit: Digits
+ */
 #define SEC1_MAX_VALUE 10
+
+/**
+ * @brief Maximum value for seconds (second digit)
+ *
+ * @details
+ * - Type: define
+ * - Range: 5
+ * - Resolution: Fixed
+ * - Unit: Digits
+ */
 #define SEC2_MAX_VALUE 5
+
+/**
+ * @brief Maximum value for minutes (first digit)
+ *
+ * @details
+ * - Type: define
+ * - Range: 9
+ * - Resolution: Fixed
+ * - Unit: Digits
+ */
 #define MIN1_MAX_VALUE 9
+
+/**
+ * @brief Maximum value for minutes (second digit)
+ *
+ * @details
+ * - Type: define
+ * - Range: 5
+ * - Resolution: Fixed
+ * - Unit: Digits
+ */
 #define MIN2_MAX_VALUE 5
+
+/**
+ * @brief Maximum value for hours (first digit)
+ *
+ * @details
+ * - Type: define
+ * - Range: 9
+ * - Resolution: Fixed
+ * - Unit: Digits
+ */
 #define HOUR1_MAX_VALUE 9
+
+/**
+ * @brief Maximum value for hours (second digit)
+ *
+ * @details
+ * - Type: define
+ * - Range: 9
+ * - Resolution: Fixed
+ * - Unit: Digits
+ */
 #define HOUR2_MAX_VALUE 9
 /* ===================================================================================================
 											  Global Variables
    ===================================================================================================*/
-volatile uint8 Sec1 = RESET_VALUE;
-volatile uint8 Sec2 = RESET_VALUE;
-volatile uint8 Min1 = RESET_VALUE;
-volatile uint8 Min2 = RESET_VALUE;
+volatile uint8 Sec1  = RESET_VALUE;
+volatile uint8 Sec2  = RESET_VALUE;
+volatile uint8 Min1  = RESET_VALUE;
+volatile uint8 Min2  = RESET_VALUE;
 volatile uint8 Hour1 = RESET_VALUE;
 volatile uint8 Hour2 = RESET_VALUE;
 
